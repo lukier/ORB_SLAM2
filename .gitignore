@@ -1,3 +1,4 @@
 *.kdev4
 obj
 obj_release
+Vocabulary/ORBvoc.txt

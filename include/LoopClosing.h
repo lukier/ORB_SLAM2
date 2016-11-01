@@ -44,7 +44,8 @@ class KeyFrameDatabase;
 class LoopClosing
 {
 public:
-
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    
     typedef std::pair<std::set<KeyFrame*>,int> ConsistentGroup;    
     typedef std::map<KeyFrame*,g2o::Sim3,std::less<KeyFrame*>,
         Eigen::aligned_allocator<std::pair<KeyFrame *const, g2o::Sim3> > > KeyFrameAndPose;
