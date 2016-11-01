@@ -110,6 +110,8 @@ public:
     // SaveMap(const std::string &filename);
     // LoadMap(const std::string &filename);
 
+    const Tracking& getTracker() const { return *mpTracker; }
+    Tracking& getTracker() { return *mpTracker; }
 private:
 
     // Input sensor

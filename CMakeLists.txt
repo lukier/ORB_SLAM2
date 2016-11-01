@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
+
 project(ORB_SLAM2)
+set(${PROJECT_NAME}_VERSION 1.0.0)
 
 #--------------------------
 # Build configuration
@@ -18,6 +20,8 @@ add_compile_options(-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-va
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
 option(BUILD_EXAMPLES "Build examples." OFF)
+
+include(GenerateExportHeader)
 
 #--------------------------
 # External dependencies
@@ -41,9 +45,6 @@ include_directories(${Pangolin_INCLUDE_DIRS})
 #--------------------------
 # Our sources
 #--------------------------
-include_directories(include)
-include_directories(sources)
-
 set(HEADERS
 include/dbow_extensions.h
 include/FrameDrawer.h
@@ -93,6 +94,11 @@ src/Viewer.cc
 # Building
 #--------------------------
 add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES})
+target_include_directories(${PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    PRIVATE sources)
+    
 target_link_libraries(${PROJECT_NAME}
 ${OpenCV_LIBS}
 ${DBoW2_LIBRARIES}
@@ -104,6 +110,37 @@ ${Pangolin_LIBRARIES}
 #--------------------------
 # Installation
 #--------------------------
+generate_export_header(${PROJECT_NAME})
+set_property(TARGET ${PROJECT_NAME} PROPERTY VERSION ${${PROJECT_NAME}_VERSION})
+set_property(TARGET ${PROJECT_NAME} PROPERTY SOVERSION 1)
+set_property(TARGET ${PROJECT_NAME} PROPERTY INTERFACE_${PROJECT_NAME}_MAJOR_VERSION 1)
+set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPATIBLE_INTERFACE_STRING ${PROJECT_NAME}_MAJOR_VERSION)
+
+install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}Targets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include)
+install(FILES ${HEADERS} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_export.h" DESTINATION include)
+
+# ------------------------------------------------------------------------------
+# Installation - generate version file
+# ------------------------------------------------------------------------------
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+  VERSION ${${PROJECT_NAME}_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+
+# ------------------------------------------------------------------------------
+# Installation - Export Targets
+# ------------------------------------------------------------------------------
+export(EXPORT ${PROJECT_NAME}Targets FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake") 
+configure_file(${PROJECT_NAME}Config.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake" @ONLY)
+set(ConfigPackageLocation lib/cmake/${PROJECT_NAME})
+install(EXPORT ${PROJECT_NAME}Targets FILE ${PROJECT_NAME}Targets.cmake DESTINATION ${ConfigPackageLocation})
+install(FILES ${PROJECT_NAME}Config.cmake "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake" DESTINATION ${ConfigPackageLocation})
 export(PACKAGE ${PROJECT_NAME})
 
 #--------------------------
