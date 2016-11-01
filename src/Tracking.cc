@@ -35,8 +35,8 @@
 
 #include<iostream>
 
-#include<mutex>
-
+#include <mutex>
+#include <chrono>
 
 using namespace std;
 
@@ -1507,7 +1507,7 @@ void Tracking::Reset()
 
     std::cout << "System Reseting" << std::endl;
     while(!mpViewer->isStopped())
-        usleep(3000);
+        std::this_thread::sleep_for(std::chrono::microseconds(3000));
 
     // Reset Local Mapping
     std::cout << "Reseting Local Mapper...";

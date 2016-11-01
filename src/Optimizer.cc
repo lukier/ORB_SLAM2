@@ -32,6 +32,8 @@
 
 #include "Converter.h"
 
+#include "g2o_extensions.h"
+
 #include<mutex>
 
 namespace ORB_SLAM2
@@ -801,7 +803,7 @@ void Optimizer::OptimizeEssentialGraph(Map* pMap, KeyFrame* pLoopKF, KeyFrame* p
 
     std::vector<g2o::Sim3,Eigen::aligned_allocator<g2o::Sim3> > vScw(nMaxKFid+1);
     std::vector<g2o::Sim3,Eigen::aligned_allocator<g2o::Sim3> > vCorrectedSwc(nMaxKFid+1);
-    std::vector<g2o::VertexSim3Expmap*> vpVertices(nMaxKFid+1);
+    std::vector<g2o::VertexSim3ExpmapTwoCam*> vpVertices(nMaxKFid+1);
 
     const int minFeat = 100;
 
@@ -811,7 +813,7 @@ void Optimizer::OptimizeEssentialGraph(Map* pMap, KeyFrame* pLoopKF, KeyFrame* p
         KeyFrame* pKF = vpKFs[i];
         if(pKF->isBad())
             continue;
-        g2o::VertexSim3Expmap* VSim3 = new g2o::VertexSim3Expmap();
+        g2o::VertexSim3ExpmapTwoCam* VSim3 = new g2o::VertexSim3ExpmapTwoCam();
 
         const int nIDi = pKF->mnId;
 
@@ -995,7 +997,7 @@ void Optimizer::OptimizeEssentialGraph(Map* pMap, KeyFrame* pLoopKF, KeyFrame* p
 
         const int nIDi = pKFi->mnId;
 
-        g2o::VertexSim3Expmap* VSim3 = static_cast<g2o::VertexSim3Expmap*>(optimizer.vertex(nIDi));
+        g2o::VertexSim3ExpmapTwoCam* VSim3 = static_cast<g2o::VertexSim3ExpmapTwoCam*>(optimizer.vertex(nIDi));
         g2o::Sim3 CorrectedSiw =  VSim3->estimate();
         vCorrectedSwc[nIDi]=CorrectedSiw.inverse();
         Eigen::Matrix3d eigR = CorrectedSiw.rotation().toRotationMatrix();
@@ -1066,7 +1068,7 @@ int Optimizer::OptimizeSim3(KeyFrame *pKF1, KeyFrame *pKF2, std::vector<MapPoint
     const cv::Mat t2w = pKF2->GetTranslation();
 
     // Set Sim3 vertex
-    g2o::VertexSim3Expmap * vSim3 = new g2o::VertexSim3Expmap();
+    g2o::VertexSim3ExpmapTwoCam * vSim3 = new g2o::VertexSim3ExpmapTwoCam();
     vSim3->_fix_scale=bFixScale;
     vSim3->setEstimate(g2oS12);
     vSim3->setId(0);
@@ -1234,7 +1236,7 @@ int Optimizer::OptimizeSim3(KeyFrame *pKF1, KeyFrame *pKF2, std::vector<MapPoint
     }
 
     // Recover optimized Sim3
-    g2o::VertexSim3Expmap* vSim3_recov = static_cast<g2o::VertexSim3Expmap*>(optimizer.vertex(0));
+    g2o::VertexSim3ExpmapTwoCam* vSim3_recov = static_cast<g2o::VertexSim3ExpmapTwoCam*>(optimizer.vertex(0));
     g2oS12= vSim3_recov->estimate();
 
     return nIn;

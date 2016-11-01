@@ -25,10 +25,12 @@
 #include <DBoW2/FORB.h>
 #include <DBoW2/TemplatedVocabulary.h>
 
+#include "dbow_extensions.h"
+
 namespace ORB_SLAM2
 {
 
-typedef DBoW2::TemplatedVocabulary<DBoW2::FORB::TDescriptor, DBoW2::FORB>
+typedef DBoW2::TemplatedVocabularyWithTextIO<DBoW2::FORB::TDescriptor, DBoW2::FORB>
   ORBVocabulary;
 
 } //namespace ORB_SLAM
