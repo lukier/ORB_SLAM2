@@ -174,9 +174,9 @@ protected:
     System* mpSystem;
 
     //Drawers
-    Viewer* mpViewer;
-    FrameDrawer* mpFrameDrawer;
-    MapDrawer* mpMapDrawer;
+    //Viewer* mpViewer;
+    //FrameDrawer* mpFrameDrawer;
+    //MapDrawer* mpMapDrawer;
 
     //Map
     Map* mpMap;

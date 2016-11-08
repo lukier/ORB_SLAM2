@@ -137,6 +137,7 @@ write_basic_package_version_file(
 # Installation - Export Targets
 # ------------------------------------------------------------------------------
 export(EXPORT ${PROJECT_NAME}Targets FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake") 
+set(ORB_SLAM2_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 configure_file(${PROJECT_NAME}Config.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake" @ONLY)
 set(ConfigPackageLocation lib/cmake/${PROJECT_NAME})
 install(EXPORT ${PROJECT_NAME}Targets FILE ${PROJECT_NAME}Targets.cmake DESTINATION ${ConfigPackageLocation})
