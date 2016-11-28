@@ -22,14 +22,14 @@
 #define KEYFRAME_H
 
 #include "MapPoint.h"
-#include <DBoW2/BowVector.h>
-#include <DBoW2/FeatureVector.h>
 #include "ORBVocabulary.h"
 #include "ORBextractor.h"
 #include "Frame.h"
 #include "KeyFrameDatabase.h"
 
 #include <mutex>
+#include <map>
+#include <memory>
 
 
 namespace ORB_SLAM2
@@ -43,8 +43,14 @@ class KeyFrameDatabase;
 class KeyFrame
 {
 public:
+    KeyFrame() = delete;
+    KeyFrame(const KeyFrame&) = delete;
+    KeyFrame(const KeyFrame&&) = delete;
+    KeyFrame& operator=(KeyFrame frame) = delete;
+    KeyFrame& operator=(KeyFrame&& frame) = delete;
     KeyFrame(Frame &F, Map* pMap, KeyFrameDatabase* pKFDB);
-
+    ~KeyFrame();
+    
     // Pose functions
     void SetPose(const cv::Mat &Tcw);
     cv::Mat GetPose();
@@ -167,8 +173,8 @@ public:
     const cv::Mat mDescriptors;
 
     //BoW
-    DBoW2::BowVector mBowVec;
-    DBoW2::FeatureVector mFeatVec;
+    std::unique_ptr<DBoW3::BowVector> mBowVec;
+    std::unique_ptr<DBoW3::FeatureVector> mFeatVec;
 
     // Pose relative to parent (this is computed when bad flag is activated)
     cv::Mat mTcp;

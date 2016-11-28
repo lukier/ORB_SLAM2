@@ -22,17 +22,18 @@
 #include "Converter.h"
 #include "ORBmatcher.h"
 #include <thread>
+#include <DBoW3.h>
 
 namespace ORB_SLAM2
 {
-
+    
 long unsigned int Frame::nNextId=0;
 bool Frame::mbInitialComputations=true;
 float Frame::cx, Frame::cy, Frame::fx, Frame::fy, Frame::invfx, Frame::invfy;
 float Frame::mnMinX, Frame::mnMinY, Frame::mnMaxX, Frame::mnMaxY;
 float Frame::mfGridElementWidthInv, Frame::mfGridElementHeightInv;
 
-Frame::Frame()
+Frame::Frame() : mBowVec(new DBoW3::BowVector()), mFeatVec(new DBoW3::FeatureVector())
 {}
 
 //Copy Constructor
@@ -41,7 +42,7 @@ Frame::Frame(const Frame &frame)
      mTimeStamp(frame.mTimeStamp), mK(frame.mK.clone()), mDistCoef(frame.mDistCoef.clone()),
      mbf(frame.mbf), mb(frame.mb), mThDepth(frame.mThDepth), N(frame.N), mvKeys(frame.mvKeys),
      mvKeysRight(frame.mvKeysRight), mvKeysUn(frame.mvKeysUn),  mvuRight(frame.mvuRight),
-     mvDepth(frame.mvDepth), mBowVec(frame.mBowVec), mFeatVec(frame.mFeatVec),
+     mvDepth(frame.mvDepth), mBowVec(new DBoW3::BowVector(*frame.mBowVec)), mFeatVec(new DBoW3::FeatureVector(*frame.mFeatVec)),
      mDescriptors(frame.mDescriptors.clone()), mDescriptorsRight(frame.mDescriptorsRight.clone()),
      mvpMapPoints(frame.mvpMapPoints), mvbOutlier(frame.mvbOutlier), mnId(frame.mnId),
      mpReferenceKF(frame.mpReferenceKF), mnScaleLevels(frame.mnScaleLevels),
@@ -57,9 +58,64 @@ Frame::Frame(const Frame &frame)
         SetPose(frame.mTcw);
 }
 
+void swap(Frame& first, Frame& second) noexcept
+{
+    using std::swap;
+    
+    swap(first.mpORBvocabulary, second.mpORBvocabulary);
+    swap(first.mpORBextractorLeft, second.mpORBextractorLeft);
+    swap(first.mpORBextractorRight, second.mpORBextractorRight);
+    swap(first.mTimeStamp, second.mTimeStamp);
+    swap(first.mK, second.mK);
+    swap(first.mDistCoef, second.mDistCoef);
+    swap(first.mbf, second.mbf);
+    swap(first.mb, second.mb);
+    swap(first.mThDepth, second.mThDepth);
+    swap(first.N, second.N);
+    swap(first.mvKeys, second.mvKeys);
+    swap(first.mvKeysRight, second.mvKeysRight);
+    swap(first.mvKeysUn, second.mvKeysUn);
+    swap(first.mvuRight, second.mvuRight);
+    swap(first.mvDepth, second.mvDepth);
+    swap(first.mBowVec, second.mBowVec);
+    swap(first.mFeatVec, second.mFeatVec);
+    swap(first.mDescriptors, second.mDescriptors);
+    swap(first.mDescriptorsRight, second.mDescriptorsRight);
+    swap(first.mvpMapPoints, second.mvpMapPoints);
+    swap(first.mvbOutlier, second.mvbOutlier);
+    for(int i=0;i<FRAME_GRID_COLS;i++)
+        for(int j=0; j<FRAME_GRID_ROWS; j++)
+            swap(first.mGrid[i][j],second.mGrid[i][j]);
+    swap(first.mTcw, second.mTcw);
+    swap(first.mnId, second.mnId);
+    swap(first.mpReferenceKF, second.mpReferenceKF);
+    swap(first.mnScaleLevels, second.mnScaleLevels);
+    swap(first.mfScaleFactor, second.mfScaleFactor);
+    swap(first.mfLogScaleFactor, second.mfLogScaleFactor);
+    swap(first.mvScaleFactors, second.mvScaleFactors);
+    swap(first.mvInvScaleFactors, second.mvInvScaleFactors);
+    swap(first.mvLevelSigma2, second.mvLevelSigma2);
+    swap(first.mvInvLevelSigma2, second.mvInvLevelSigma2);
+    swap(first.mRcw, second.mRcw);
+    swap(first.mtcw, second.mtcw);
+    swap(first.mRwc, second.mRwc);
+    swap(first.mOw, second.mOw);
+}
+
+Frame::Frame(Frame&& frame) noexcept : Frame()
+{
+    swap(*this, frame);
+}
+
+Frame& Frame::operator=(Frame frame)
+{
+    swap( *this, frame );
+    return *this;
+}
 
 Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeStamp, ORBextractor* extractorLeft, ORBextractor* extractorRight, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
     :mpORBvocabulary(voc),mpORBextractorLeft(extractorLeft),mpORBextractorRight(extractorRight), mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth),
+     mBowVec(new DBoW3::BowVector()), mFeatVec(new DBoW3::FeatureVector()),
      mpReferenceKF(static_cast<KeyFrame*>(NULL))
 {
     // Frame ID
@@ -118,7 +174,7 @@ Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeSt
 
 Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
     :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
-     mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth)
+     mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth), mBowVec(new DBoW3::BowVector()), mFeatVec(new DBoW3::FeatureVector())
 {
     // Frame ID
     mnId=nNextId++;
@@ -173,7 +229,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
 
 Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth)
     :mpORBvocabulary(voc),mpORBextractorLeft(extractor),mpORBextractorRight(static_cast<ORBextractor*>(NULL)),
-     mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth)
+     mTimeStamp(timeStamp), mK(K.clone()),mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth), mBowVec(new DBoW3::BowVector()), mFeatVec(new DBoW3::FeatureVector())
 {
     // Frame ID
     mnId=nNextId++;
@@ -225,6 +281,11 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     mb = mbf/fx;
 
     AssignFeaturesToGrid();
+}
+
+Frame::~Frame()
+{
+    
 }
 
 void Frame::AssignFeaturesToGrid()
@@ -394,10 +455,10 @@ bool Frame::PosInGrid(const cv::KeyPoint &kp, int &posX, int &posY)
 
 void Frame::ComputeBoW()
 {
-    if(mBowVec.empty())
+    if(mBowVec->empty())
     {
         std::vector<cv::Mat> vCurrentDesc = Converter::toDescriptorVector(mDescriptors);
-        mpORBvocabulary->transform(vCurrentDesc,mBowVec,mFeatVec,4);
+        mpORBvocabulary->transform(vCurrentDesc,*mBowVec,*mFeatVec,4);
     }
 }
 

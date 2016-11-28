@@ -25,7 +25,6 @@
 #include<opencv2/features2d/features2d.hpp>
 
 #include"ORBmatcher.h"
-#include"FrameDrawer.h"
 #include"Converter.h"
 #include"Map.h"
 #include"Initializer.h"
@@ -160,7 +159,7 @@ void Tracking::SetLoopClosing(LoopClosing *pLoopClosing)
 
 void Tracking::SetViewer(Viewer *pViewer)
 {
-    //mpViewer=pViewer;
+    
 }
 
 
@@ -1503,11 +1502,8 @@ bool Tracking::Relocalization()
 
 void Tracking::Reset()
 {
-    //mpViewer->RequestStop();
 
     std::cout << "System Reseting" << std::endl;
-    //while(!mpViewer->isStopped())
-    //    std::this_thread::sleep_for(std::chrono::microseconds(3000));
 
     // Reset Local Mapping
     std::cout << "Reseting Local Mapper...";
@@ -1541,8 +1537,6 @@ void Tracking::Reset()
     mlpReferences.clear();
     mlFrameTimes.clear();
     mlbLost.clear();
-
-    //mpViewer->Release();
 }
 
 void Tracking::ChangeCalibration(const std::string &strSettingPath)

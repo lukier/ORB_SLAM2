@@ -23,8 +23,9 @@
 #include "System.h"
 #include "Converter.h"
 #include <thread>
-#include <pangolin/pangolin.h>
 #include <iomanip>
+
+#include <DBoW3.h>
 
 namespace ORB_SLAM2
 {
@@ -62,8 +63,12 @@ System::System(const std::string &strVocFile, const std::string &strSettingsFile
     std::cout << std::endl << "Loading ORB Vocabulary. This could take a while..." << std::endl;
 
     mpVocabulary = new ORBVocabulary();
-    bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
-    if(!bVocLoad)
+    
+    try
+    {
+        mpVocabulary->load(strVocFile);
+    }
+    catch(const std::exception& ex)
     {
         std::cerr << "Wrong path to vocabulary. " << std::endl;
         std::cerr << "Falied to open at: " << strVocFile << std::endl;
@@ -76,11 +81,6 @@ System::System(const std::string &strVocFile, const std::string &strSettingsFile
 
     //Create the Map
     mpMap = new Map();
-
-    //Create Drawers. These are used by the Viewer
-    //mpFrameDrawer = new FrameDrawer(mpMap);
-    //mpMapDrawer = new MapDrawer(mpMap, strSettingsFile);
-
     //Initialize the Tracking thread
     //(it will live in the main thread of execution, the one that called this constructor)
     mpTracker = new Tracking(this, mpVocabulary, nullptr, nullptr,
@@ -93,13 +93,6 @@ System::System(const std::string &strVocFile, const std::string &strSettingsFile
     //Initialize the Loop Closing thread and launch
     mpLoopCloser = new LoopClosing(mpMap, mpKeyFrameDatabase, mpVocabulary, mSensor!=MONOCULAR);
     mptLoopClosing = new std::thread(&ORB_SLAM2::LoopClosing::Run, mpLoopCloser);
-
-    //Initialize the Viewer thread and launch
-    //mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,strSettingsFile);
-    //if(bUseViewer)
-    //    mptViewer = new std::thread(&Viewer::Run, mpViewer);
-
-    //mpTracker->SetViewer(mpViewer);
 
     //Set pointers between threads
     mpTracker->SetLocalMapper(mpLocalMapper);
@@ -269,16 +262,12 @@ void System::Shutdown()
 {
     mpLocalMapper->RequestFinish();
     mpLoopCloser->RequestFinish();
-    //mpViewer->RequestFinish();
 
     // Wait until all thread have effectively stopped
-    while(!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished()  ||
-          /*!mpViewer->isFinished()      ||*/ mpLoopCloser->isRunningGBA())
+    while(!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished()  ||  mpLoopCloser->isRunningGBA())
     {
         std::this_thread::sleep_for(std::chrono::microseconds(5000));
     }
-
-    pangolin::BindToContext("ORB-SLAM2: Map Viewer");
 }
 
 void System::SaveTrajectoryTUM(const std::string &filename)

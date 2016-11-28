@@ -25,8 +25,6 @@
 #include<opencv2/core/core.hpp>
 #include<opencv2/features2d/features2d.hpp>
 
-#include "Viewer.h"
-#include "FrameDrawer.h"
 #include "Map.h"
 #include "LocalMapping.h"
 #include "LoopClosing.h"
@@ -35,7 +33,6 @@
 #include "KeyFrameDatabase.h"
 #include "ORBextractor.h"
 #include "Initializer.h"
-#include "MapDrawer.h"
 #include "System.h"
 
 #include <mutex>
@@ -44,11 +41,12 @@ namespace ORB_SLAM2
 {
 
 class Viewer;
-class FrameDrawer;
 class Map;
 class LocalMapping;
 class LoopClosing;
 class System;
+class FrameDrawer;
+class MapDrawer;
 
 class Tracking
 {
@@ -172,11 +170,6 @@ protected:
 
     // System
     System* mpSystem;
-
-    //Drawers
-    //Viewer* mpViewer;
-    //FrameDrawer* mpFrameDrawer;
-    //MapDrawer* mpMapDrawer;
 
     //Map
     Map* mpMap;

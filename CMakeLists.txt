@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.1)
 
+if(NOT DEFINED CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 project(ORB_SLAM2)
 set(${PROJECT_NAME}_VERSION 1.0.0)
 
 #--------------------------
 # Build configuration
 #--------------------------
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
 set(CMAKE_CXX_STANDARD 11) 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_definitions(-DCOMPILEDWITHC11)
@@ -23,6 +23,8 @@ option(BUILD_EXAMPLES "Build examples." OFF)
 
 include(GenerateExportHeader)
 
+message("Building ${PROJECT_NAME}, ${CMAKE_BUILD_TYPE}, Examples: ${BUILD_EXAMPLES}")
+
 #--------------------------
 # External dependencies
 #--------------------------
@@ -31,30 +33,40 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
+if(NOT OpenCV_VERSION VERSION_LESS "3.0")
+    add_definitions(-DOPENCV_VERSION_3)
+    set(OPENCV_VERSION_3 ON)
+else()
+    set(OPENCV_VERSION_3 OFF)
+endif()
 
 find_package(G2O REQUIRED)
 include_directories(${G2O_INCLUDE_DIR})
 
-find_package(DLib REQUIRED)
-find_package(DBoW2 REQUIRED)
-include_directories(${DBoW2_INCLUDE_DIR})
-
-find_package(Pangolin REQUIRED)
-include_directories(${Pangolin_INCLUDE_DIRS})
+#--------------------------
+# DBoW3 Dependency
+#--------------------------
+set(DBOW3_SOURCES
+external/DBoW3/src/BowVector.cpp
+external/DBoW3/src/Database.cpp
+external/DBoW3/src/DescManip.cpp
+external/DBoW3/src/FeatureVector.cpp
+external/DBoW3/src/QueryResults.cpp
+external/DBoW3/src/quicklz.c
+external/DBoW3/src/ScoringObject.cpp
+external/DBoW3/src/Vocabulary.cpp
+)
 
 #--------------------------
 # Our sources
 #--------------------------
 set(HEADERS
-include/dbow_extensions.h
-include/FrameDrawer.h
 include/Frame.h
 include/Initializer.h
 include/KeyFrameDatabase.h
 include/KeyFrame.h
 include/LocalMapping.h
 include/LoopClosing.h
-include/MapDrawer.h
 include/Map.h
 include/MapPoint.h
 include/Optimizer.h
@@ -65,7 +77,6 @@ include/PnPsolver.h
 include/Sim3Solver.h
 include/System.h
 include/Tracking.h
-include/Viewer.h
 )
 
 set(SOURCES
@@ -75,42 +86,33 @@ src/LocalMapping.cc
 src/LoopClosing.cc
 src/ORBextractor.cc
 src/ORBmatcher.cc
-src/FrameDrawer.cc
 src/Converter.cc
 src/MapPoint.cc
 src/KeyFrame.cc
 src/Map.cc
-src/MapDrawer.cc
 src/Optimizer.cc
 src/PnPsolver.cc
 src/Frame.cc
 src/KeyFrameDatabase.cc
 src/Sim3Solver.cc
 src/Initializer.cc
-src/Viewer.cc
 )
 
 #--------------------------
 # Building
 #--------------------------
-add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES})
+add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES} ${DBOW3_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
-    PRIVATE sources)
+    PRIVATE sources external/DBoW3/src)
     
-target_link_libraries(${PROJECT_NAME}
-${OpenCV_LIBS}
-${DBoW2_LIBRARIES}
-${DLib_LIBRARIES}
-${G2O_LIBRARIRES}
-${Pangolin_LIBRARIES}
-)
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${G2O_LIBRARIRES})
 
 #--------------------------
 # Installation
 #--------------------------
-generate_export_header(${PROJECT_NAME})
+generate_export_header(${PROJECT_NAME} EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_export.h)
 set_property(TARGET ${PROJECT_NAME} PROPERTY VERSION ${${PROJECT_NAME}_VERSION})
 set_property(TARGET ${PROJECT_NAME} PROPERTY SOVERSION 1)
 set_property(TARGET ${PROJECT_NAME} PROPERTY INTERFACE_${PROJECT_NAME}_MAJOR_VERSION 1)
@@ -122,6 +124,7 @@ install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}Targets
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include)
 install(FILES ${HEADERS} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_export.h" DESTINATION include)
+install(FILES external/DBoW3/orbvoc.dbow3 DESTINATION share/${PROJECT_NAME})
 
 # ------------------------------------------------------------------------------
 # Installation - generate version file
@@ -136,18 +139,25 @@ write_basic_package_version_file(
 # ------------------------------------------------------------------------------
 # Installation - Export Targets
 # ------------------------------------------------------------------------------
-export(EXPORT ${PROJECT_NAME}Targets FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake") 
-set(ORB_SLAM2_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-configure_file(${PROJECT_NAME}Config.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake" @ONLY)
+# Config.cmake for the install tree
 set(ConfigPackageLocation lib/cmake/${PROJECT_NAME})
+export(EXPORT ${PROJECT_NAME}Targets FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake") 
+set(ORB_SLAM2_VOC_PATH \${ORB_SLAM2_CMAKE_DIR}/../../../share/${PROJECT_NAME})
+configure_file(${PROJECT_NAME}Config.cmake.in "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake" @ONLY)
 install(EXPORT ${PROJECT_NAME}Targets FILE ${PROJECT_NAME}Targets.cmake DESTINATION ${ConfigPackageLocation})
-install(FILES ${PROJECT_NAME}Config.cmake "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake" DESTINATION ${ConfigPackageLocation})
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECT_NAME}Config.cmake" "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake" DESTINATION ${ConfigPackageLocation})
+# Config.cmake for the build tree
+set(ORB_SLAM2_VOC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/external/DBoW3)
+configure_file(${PROJECT_NAME}Config.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake" @ONLY)
 export(PACKAGE ${PROJECT_NAME})
 
 #--------------------------
 # Build examples
 #--------------------------
 if(BUILD_EXAMPLES)
+    find_package(Pangolin REQUIRED)
+    include_directories(${Pangolin_INCLUDE_DIRS})
+
     add_executable(rgbd_tum Examples/RGB-D/rgbd_tum.cc)
     target_link_libraries(rgbd_tum ${PROJECT_NAME} ${Pangolin_LIBRARIES} ${G2O_LIBRARIES})
 

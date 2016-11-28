@@ -21,11 +21,10 @@
 #ifndef FRAME_H
 #define FRAME_H
 
-#include<vector>
+#include <vector>
+#include <memory>
 
 #include "MapPoint.h"
-#include <DBoW2/BowVector.h>
-#include <DBoW2/FeatureVector.h>
 #include "ORBVocabulary.h"
 #include "KeyFrame.h"
 #include "ORBextractor.h"
@@ -47,6 +46,7 @@ public:
 
     // Copy constructor.
     Frame(const Frame &frame);
+    Frame(Frame&& frame) noexcept; 
 
     // Constructor for stereo cameras.
     Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeStamp, ORBextractor* extractorLeft, ORBextractor* extractorRight, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
@@ -56,6 +56,12 @@ public:
 
     // Constructor for Monocular cameras.
     Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth);
+    
+    ~Frame();
+    
+    Frame& operator=(Frame frame);
+    
+    friend void swap(Frame& first, Frame& second) noexcept;
 
     // Extract ORB on the image. 0 for left image and 1 for right image.
     void ExtractORB(int flag, const cv::Mat &im);
@@ -143,8 +149,8 @@ public:
     std::vector<float> mvDepth;
 
     // Bag of Words Vector structures.
-    DBoW2::BowVector mBowVec;
-    DBoW2::FeatureVector mFeatVec;
+    std::unique_ptr<DBoW3::BowVector> mBowVec;
+    std::unique_ptr<DBoW3::FeatureVector> mFeatVec;
 
     // ORB descriptor, each row associated to a keypoint.
     cv::Mat mDescriptors, mDescriptorsRight;

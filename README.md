@@ -1,3 +1,15 @@
+## NOTE: This is a heavily modified version. 
+
+* fixed missing std:: and EIGEN_MAKE_ALIGNED_OPERATOR_NEW,
+* replaced usleep (that often missed correct include) with std::chrono,
+* removing verbatim copy of g2o, instead find_package,
+* nasty DLib dependency removed, embedding DBoW3 instead (https://github.com/rmsalinas/DBow3) as a git submodule (no verbatim copy!) and hiding it in the public headers (forward declarations),
+* modern CMake with exported targets in build (dev) and install and relying on find_package for dependencies,
+* CMake config file is defining ORB_SLAM2_VOC_PATH variable for the users to find orbvoc.dbow3 file,
+* visualization code removed,
+* getter for Tracking in the System class.
+
+---
 # ORB-SLAM2
 **Authors:** [Raul Mur-Artal](http://webdiis.unizar.es/~raulmur/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/), [J. M. M. Montiel](http://webdiis.unizar.es/~josemari/) and [Dorian Galvez-Lopez](http://doriangalvez.com/) ([DBoW2](https://github.com/dorian3d/DBoW2))
 
