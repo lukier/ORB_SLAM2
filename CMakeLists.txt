@@ -29,19 +29,8 @@ message("Building ${PROJECT_NAME}, ${CMAKE_BUILD_TYPE}, Examples: ${BUILD_EXAMPL
 # External dependencies
 #--------------------------
 find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR})
-
 find_package(OpenCV REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS})
-if(NOT OpenCV_VERSION VERSION_LESS "3.0")
-    add_definitions(-DOPENCV_VERSION_3)
-    set(OPENCV_VERSION_3 ON)
-else()
-    set(OPENCV_VERSION_3 OFF)
-endif()
-
 find_package(G2O REQUIRED)
-include_directories(${G2O_INCLUDE_DIR})
 
 #--------------------------
 # DBoW3 Dependency
@@ -106,8 +95,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
     PRIVATE sources external/DBoW3/src)
-    
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${G2O_LIBRARIRES})
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS} ${G2O_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS} ${G2O_LIBRARIRES})
 
 #--------------------------
 # Installation
