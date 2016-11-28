@@ -97,7 +97,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     PRIVATE sources external/DBoW3/src)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${EIGEN3_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS} ${G2O_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS} ${G2O_LIBRARIRES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${G2O_STUFF_LIBRARY} ${G2O_CORE_LIBRARY} ${G2O_TYPES_SIM3}) 
+target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS})
 
 #--------------------------
 # Installation
@@ -149,21 +150,21 @@ if(BUILD_EXAMPLES)
     include_directories(${Pangolin_INCLUDE_DIRS})
 
     add_executable(rgbd_tum Examples/RGB-D/rgbd_tum.cc)
-    target_link_libraries(rgbd_tum ${PROJECT_NAME} ${Pangolin_LIBRARIES} ${G2O_LIBRARIES})
+    target_link_libraries(rgbd_tum ${PROJECT_NAME} ${Pangolin_LIBRARIES} ${G2O_STUFF_LIBRARY} ${G2O_CORE_LIBRARY} ${G2O_TYPES_SIM3})
 
     add_executable(stereo_kitti Examples/Stereo/stereo_kitti.cc)
-    target_link_libraries(stereo_kitti ${PROJECT_NAME} ${Pangolin_LIBRARIES} ${G2O_LIBRARIES})
+    target_link_libraries(stereo_kitti ${PROJECT_NAME} ${Pangolin_LIBRARIES} ${G2O_STUFF_LIBRARY} ${G2O_CORE_LIBRARY} ${G2O_TYPES_SIM3})
 
     add_executable(stereo_euroc Examples/Stereo/stereo_euroc.cc)
-    target_link_libraries(stereo_euroc ${PROJECT_NAME} ${Pangolin_LIBRARIES} ${G2O_LIBRARIES})
+    target_link_libraries(stereo_euroc ${PROJECT_NAME} ${Pangolin_LIBRARIES} ${G2O_STUFF_LIBRARY} ${G2O_CORE_LIBRARY} ${G2O_TYPES_SIM3})
 
     add_executable(mono_tum Examples/Monocular/mono_tum.cc)
-    target_link_libraries(mono_tum ${PROJECT_NAME} ${Pangolin_LIBRARIES} ${G2O_LIBRARIES})
+    target_link_libraries(mono_tum ${PROJECT_NAME} ${Pangolin_LIBRARIES} ${G2O_STUFF_LIBRARY} ${G2O_CORE_LIBRARY} ${G2O_TYPES_SIM3})
 
     add_executable(mono_kitti Examples/Monocular/mono_kitti.cc)
-    target_link_libraries(mono_kitti ${PROJECT_NAME} ${Pangolin_LIBRARIES} ${G2O_LIBRARIES})
+    target_link_libraries(mono_kitti ${PROJECT_NAME} ${Pangolin_LIBRARIES} ${G2O_STUFF_LIBRARY} ${G2O_CORE_LIBRARY} ${G2O_TYPES_SIM3})
 
     add_executable(mono_euroc Examples/Monocular/mono_euroc.cc)
-    target_link_libraries(mono_euroc ${PROJECT_NAME} ${Pangolin_LIBRARIES} ${G2O_LIBRARIES})
+    target_link_libraries(mono_euroc ${PROJECT_NAME} ${Pangolin_LIBRARIES} ${G2O_STUFF_LIBRARY} ${G2O_CORE_LIBRARY} ${G2O_TYPES_SIM3})
 endif()
 
