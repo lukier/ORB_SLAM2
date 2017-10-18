@@ -25,7 +25,8 @@ namespace internal
         return res;
     }
 }
-    
+ 
+#if 0 // now in g20
 class  EdgeSE3ProjectXYZ: public  BaseBinaryEdge<2, Vector2D, VertexSBAPointXYZ, VertexSE3Expmap>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -127,8 +128,9 @@ public:
     
     double fx, fy, cx, cy;
 };
+#endif
 
-
+#if 0 // now in g20
 class  EdgeStereoSE3ProjectXYZ: public  BaseBinaryEdge<3, Vector3D, VertexSBAPointXYZ, VertexSE3Expmap>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -241,7 +243,9 @@ public:
     
     double fx, fy, cx, cy, bf;
 };
+#endif
 
+#if 0 // now in g20
 class  EdgeSE3ProjectXYZOnlyPose: public  BaseUnaryEdge<2, Vector2D, VertexSE3Expmap>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -325,8 +329,9 @@ public:
     Vector3D Xw;
     double fx, fy, cx, cy;
 };
+#endif
 
-
+#if 0 // now in g20
 class  EdgeStereoSE3ProjectXYZOnlyPose: public  BaseUnaryEdge<3, Vector3D, VertexSE3Expmap>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -421,6 +426,7 @@ public:
     Vector3D Xw;
     double fx, fy, cx, cy, bf;
 };
+#endif
     
 class VertexSim3ExpmapTwoCam : public BaseVertex<7, Sim3>
 {
@@ -513,6 +519,7 @@ public:
     bool _fix_scale;
 };
 
+#if 0 // now in g20
 class EdgeInverseSim3ProjectXYZ : public  BaseBinaryEdge<2, Vector2D,  VertexSBAPointXYZ, VertexSim3ExpmapTwoCam>
 {
   public:
@@ -563,6 +570,7 @@ class EdgeInverseSim3ProjectXYZ : public  BaseBinaryEdge<2, Vector2D,  VertexSBA
    // virtual void linearizeOplus();
 
 };
+#endif
 
 }
 
