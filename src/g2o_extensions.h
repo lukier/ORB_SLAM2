@@ -10,15 +10,15 @@ namespace g2o
 
 namespace internal
 {
-    static inline Vector2D project2d(const Vector3D& v)  {
-        Vector2D res;
+    static inline Vector2 project2d(const Vector3& v)  {
+        Vector2 res;
         res(0) = v(0)/v(2);
         res(1) = v(1)/v(2);
         return res;
     }
     
-    static inline Vector3D unproject2d(const Vector2D& v)  {
-        Vector3D res;
+    static inline Vector3 unproject2d(const Vector2& v)  {
+        Vector3 res;
         res(0) = v(0);
         res(1) = v(1);
         res(2) = 1;
@@ -27,11 +27,11 @@ namespace internal
 }
  
 #if 0 // now in g20
-class  EdgeSE3ProjectXYZ: public  BaseBinaryEdge<2, Vector2D, VertexSBAPointXYZ, VertexSE3Expmap>{
+class  EdgeSE3ProjectXYZ: public  BaseBinaryEdge<2, Vector2, VertexSBAPointXYZ, VertexSE3Expmap>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     
-    EdgeSE3ProjectXYZ() : BaseBinaryEdge<2, Vector2D, VertexSBAPointXYZ, VertexSE3Expmap>()
+    EdgeSE3ProjectXYZ() : BaseBinaryEdge<2, Vector2, VertexSBAPointXYZ, VertexSE3Expmap>()
     {
         
     }
@@ -67,7 +67,7 @@ public:
     void computeError()  {
         const VertexSE3Expmap* v1 = static_cast<const VertexSE3Expmap*>(_vertices[1]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        Vector2D obs(_measurement);
+        Vector2 obs(_measurement);
         _error = obs-cam_project(v1->estimate().map(v2->estimate()));
     }
     
@@ -83,8 +83,8 @@ public:
         VertexSE3Expmap * vj = static_cast<VertexSE3Expmap *>(_vertices[1]);
         SE3Quat T(vj->estimate());
         VertexSBAPointXYZ* vi = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-        Vector3D xyz = vi->estimate();
-        Vector3D xyz_trans = T.map(xyz);
+        Vector3 xyz = vi->estimate();
+        Vector3 xyz_trans = T.map(xyz);
         
         double x = xyz_trans[0];
         double y = xyz_trans[1];
@@ -117,10 +117,10 @@ public:
         _jacobianOplusXj(1,5) = y/z_2 *fy;
     }
     
-    Vector2D cam_project(const Vector3D & trans_xyz) const
+    Vector2 cam_project(const Vector3 & trans_xyz) const
     {
-        Vector2D proj = internal::project2d(trans_xyz);
-        Vector2D res;
+        Vector2 proj = internal::project2d(trans_xyz);
+        Vector2 res;
         res[0] = proj[0]*fx + cx;
         res[1] = proj[1]*fy + cy;
         return res;
@@ -131,11 +131,11 @@ public:
 #endif
 
 #if 0 // now in g20
-class  EdgeStereoSE3ProjectXYZ: public  BaseBinaryEdge<3, Vector3D, VertexSBAPointXYZ, VertexSE3Expmap>{
+class  EdgeStereoSE3ProjectXYZ: public  BaseBinaryEdge<3, Vector3, VertexSBAPointXYZ, VertexSE3Expmap>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     
-    EdgeStereoSE3ProjectXYZ() : BaseBinaryEdge<3, Vector3D, VertexSBAPointXYZ, VertexSE3Expmap>()
+    EdgeStereoSE3ProjectXYZ() : BaseBinaryEdge<3, Vector3, VertexSBAPointXYZ, VertexSE3Expmap>()
     {
         
     }
@@ -171,7 +171,7 @@ public:
     void computeError()  {
         const VertexSE3Expmap* v1 = static_cast<const VertexSE3Expmap*>(_vertices[1]);
         const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
-        Vector3D obs(_measurement);
+        Vector3 obs(_measurement);
         _error = obs - cam_project(v1->estimate().map(v2->estimate()),bf);
     }
     
@@ -187,8 +187,8 @@ public:
         VertexSE3Expmap * vj = static_cast<VertexSE3Expmap *>(_vertices[1]);
         SE3Quat T(vj->estimate());
         VertexSBAPointXYZ* vi = static_cast<VertexSBAPointXYZ*>(_vertices[0]);
-        Vector3D xyz = vi->estimate();
-        Vector3D xyz_trans = T.map(xyz);
+        Vector3 xyz = vi->estimate();
+        Vector3 xyz_trans = T.map(xyz);
         
         const Eigen::Matrix3d R =  T.rotation().toRotationMatrix();
         
@@ -231,10 +231,10 @@ public:
         _jacobianOplusXj(2,5) = _jacobianOplusXj(0,5)-bf/z_2;
     }
     
-    Vector3D cam_project(const Vector3D & trans_xyz, const float &bf) const
+    Vector3 cam_project(const Vector3 & trans_xyz, const float &bf) const
     {
         const float invz = 1.0f/trans_xyz[2];
-        Vector3D res;
+        Vector3 res;
         res[0] = trans_xyz[0]*invz*fx + cx;
         res[1] = trans_xyz[1]*invz*fy + cy;
         res[2] = res[0] - bf*invz;
@@ -246,7 +246,7 @@ public:
 #endif
 
 #if 0 // now in g20
-class  EdgeSE3ProjectXYZOnlyPose: public  BaseUnaryEdge<2, Vector2D, VertexSE3Expmap>{
+class  EdgeSE3ProjectXYZOnlyPose: public  BaseUnaryEdge<2, Vector2, VertexSE3Expmap>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     
@@ -282,7 +282,7 @@ public:
     
     void computeError()  {
         const VertexSE3Expmap* v1 = static_cast<const VertexSE3Expmap*>(_vertices[0]);
-        Vector2D obs(_measurement);
+        Vector2 obs(_measurement);
         _error = obs-cam_project(v1->estimate().map(Xw));
     }
     
@@ -295,7 +295,7 @@ public:
     virtual void linearizeOplus()
     {
         VertexSE3Expmap * vi = static_cast<VertexSE3Expmap *>(_vertices[0]);
-        Vector3D xyz_trans = vi->estimate().map(Xw);
+        Vector3 xyz_trans = vi->estimate().map(Xw);
         
         double x = xyz_trans[0];
         double y = xyz_trans[1];
@@ -317,26 +317,26 @@ public:
         _jacobianOplusXi(1,5) = y*invz_2 *fy;
     }
     
-    Vector2D cam_project(const Vector3D & trans_xyz) const
+    Vector2 cam_project(const Vector3 & trans_xyz) const
     {
-        Vector2D proj = internal::project2d(trans_xyz);
-        Vector2D res;
+        Vector2 proj = internal::project2d(trans_xyz);
+        Vector2 res;
         res[0] = proj[0]*fx + cx;
         res[1] = proj[1]*fy + cy;
         return res;
     }
     
-    Vector3D Xw;
+    Vector3 Xw;
     double fx, fy, cx, cy;
 };
 #endif
 
 #if 0 // now in g20
-class  EdgeStereoSE3ProjectXYZOnlyPose: public  BaseUnaryEdge<3, Vector3D, VertexSE3Expmap>{
+class  EdgeStereoSE3ProjectXYZOnlyPose: public  BaseUnaryEdge<3, Vector3, VertexSE3Expmap>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     
-    EdgeStereoSE3ProjectXYZOnlyPose() : BaseUnaryEdge<3, Vector3D, VertexSE3Expmap>() 
+    EdgeStereoSE3ProjectXYZOnlyPose() : BaseUnaryEdge<3, Vector3, VertexSE3Expmap>() 
     {
         
     }
@@ -371,7 +371,7 @@ public:
     
     void computeError()  {
         const VertexSE3Expmap* v1 = static_cast<const VertexSE3Expmap*>(_vertices[0]);
-        Vector3D obs(_measurement);
+        Vector3 obs(_measurement);
         _error = obs - cam_project(v1->estimate().map(Xw));
     }
     
@@ -384,7 +384,7 @@ public:
     virtual void linearizeOplus()
     {
         VertexSE3Expmap * vi = static_cast<VertexSE3Expmap *>(_vertices[0]);
-        Vector3D xyz_trans = vi->estimate().map(Xw);
+        Vector3 xyz_trans = vi->estimate().map(Xw);
         
         double x = xyz_trans[0];
         double y = xyz_trans[1];
@@ -413,17 +413,17 @@ public:
         _jacobianOplusXi(2,5) = _jacobianOplusXi(0,5)-bf*invz_2;
     }
     
-    Vector3D cam_project(const Vector3D & trans_xyz) const
+    Vector3 cam_project(const Vector3 & trans_xyz) const
     {
         const float invz = 1.0f/trans_xyz[2];
-        Vector3D res;
+        Vector3 res;
         res[0] = trans_xyz[0]*invz*fx + cx;
         res[1] = trans_xyz[1]*invz*fy + cy;
         res[2] = res[0] - bf*invz;
         return res;
     }
     
-    Vector3D Xw;
+    Vector3 Xw;
     double fx, fy, cx, cy, bf;
 };
 #endif
@@ -440,7 +440,7 @@ public:
     
     virtual bool read(std::istream& is)
     {
-        Vector7d cam2world;
+        Vector7 cam2world;
         for (int i=0; i<6; i++){
             is >> cam2world[i];
         }
@@ -467,7 +467,7 @@ public:
     virtual bool write(std::ostream& os) const
     {
         Sim3 cam2world(estimate().inverse());
-        Vector7d lv=cam2world.log();
+        Vector7 lv=cam2world.log();
         for (int i=0; i<7; i++){
             os << lv[i] << " ";
         }
@@ -488,7 +488,7 @@ public:
 
     virtual void oplusImpl(const double* update_)
     {
-        Eigen::Map<Vector7d> update(const_cast<double*>(update_));
+        Eigen::Map<Vector7> update(const_cast<double*>(update_));
 
         if (_fix_scale)
         update[6] = 0;
@@ -497,20 +497,20 @@ public:
         setEstimate(s*estimate());
     }
 
-    Vector2D _principle_point1, _principle_point2;
-    Vector2D _focal_length1, _focal_length2;
+    Vector2 _principle_point1, _principle_point2;
+    Vector2 _focal_length1, _focal_length2;
 
-    Vector2D cam_map1(const Vector2D & v) const
+    Vector2 cam_map1(const Vector2 & v) const
     {
-        Vector2D res;
+        Vector2 res;
         res[0] = v[0]*_focal_length1[0] + _principle_point1[0];
         res[1] = v[1]*_focal_length1[1] + _principle_point1[1];
         return res;
     }
 
-    Vector2D cam_map2(const Vector2D & v) const
+    Vector2 cam_map2(const Vector2 & v) const
     {
-        Vector2D res;
+        Vector2 res;
         res[0] = v[0]*_focal_length2[0] + _principle_point2[0];
         res[1] = v[1]*_focal_length2[1] + _principle_point2[1];
         return res;
@@ -520,11 +520,11 @@ public:
 };
 
 #if 0 // now in g20
-class EdgeInverseSim3ProjectXYZ : public  BaseBinaryEdge<2, Vector2D,  VertexSBAPointXYZ, VertexSim3ExpmapTwoCam>
+class EdgeInverseSim3ProjectXYZ : public  BaseBinaryEdge<2, Vector2,  VertexSBAPointXYZ, VertexSim3ExpmapTwoCam>
 {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-    EdgeInverseSim3ProjectXYZ() : BaseBinaryEdge<2, Vector2D, VertexSBAPointXYZ, VertexSim3ExpmapTwoCam>()
+    EdgeInverseSim3ProjectXYZ() : BaseBinaryEdge<2, Vector2, VertexSBAPointXYZ, VertexSim3ExpmapTwoCam>()
     {
         
     }
@@ -563,7 +563,7 @@ class EdgeInverseSim3ProjectXYZ : public  BaseBinaryEdge<2, Vector2D,  VertexSBA
       const VertexSim3ExpmapTwoCam* v1 = static_cast<const VertexSim3ExpmapTwoCam*>(_vertices[1]);
       const VertexSBAPointXYZ* v2 = static_cast<const VertexSBAPointXYZ*>(_vertices[0]);
 
-      Vector2D obs(_measurement);
+      Vector2 obs(_measurement);
       _error = obs-v1->cam_map2(project(v1->estimate().inverse().map(v2->estimate())));
     }
 
